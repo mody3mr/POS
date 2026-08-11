@@ -15,6 +15,7 @@ const firebaseConfig = {
     appId: "1:330200844981:web:e63b93f36163fd14c78cfc"
 };
 
+// تهيئة Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -22,39 +23,40 @@ const db = firebase.firestore();
 db.enablePersistence().catch(err => console.log(err));
 
 // ==========================================
-// قسم الكاشير (المنيو والفاتورة)
+// المتغيرات العامة
 // ==========================================
 let menuItems = [];
 let cart = [];
-let orderType = 'تيك أواي'; // نوع الطلب الافتراضي
+let orderType = 'تيك أواي';
 
-// تحديد نوع الطلب (تيك أواي، صالة، دليفري)
-document.querySelectorAll('.type-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        orderType = e.currentTarget.innerText.trim();
-    });
-});
+// ==========================================
+// قسم الكاشير (المنيو والفاتورة)
+// ==========================================
 
-// سحب المنتجات من Firebase
+function setOrderType(type, element) {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    element.classList.add('active');
+    orderType = type;
+}
+
+// سحب المنتجات من Firebase وتحديث شاشة الكاشير والمنتجات معاً
 function fetchMenu() {
     db.collection("menu").onSnapshot((snapshot) => {
         menuItems = [];
         snapshot.forEach((doc) => {
             menuItems.push({ id: doc.id, ...doc.data() });
         });
-        renderMenu();
+        renderMenu(); // تحديث شاشة الكاشير
+        renderProductsTable(); // تحديث جدول شاشة المنتجات
     });
 }
 
-// رسم المنتجات في الشاشة
 function renderMenu() {
     const menuGrid = document.getElementById('menuGrid');
     menuGrid.innerHTML = '';
     
     if (menuItems.length === 0) {
-        menuGrid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">لا يوجد أصناف. يرجى إضافتها من Firebase.</p>';
+        menuGrid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#94a3b8;">لا يوجد أصناف حالياً.</p>';
         return;
     }
 
@@ -62,9 +64,8 @@ function renderMenu() {
         const div = document.createElement('div');
         div.className = 'product-card';
         div.onclick = () => addToCart(item);
-        // لو مفيش صورة للمنتج، هنحط مكان رمادي فاضي مؤقتاً
         div.innerHTML = `
-            <div class="product-image"></div>
+            <div class="product-image"><i class="fa-solid fa-image fa-2x"></i></div>
             <div class="product-name">${item.name}</div>
             <div class="product-price"><span>${item.price}</span> <span>ج.م</span></div>
         `;
@@ -72,7 +73,6 @@ function renderMenu() {
     });
 }
 
-// إضافة للفاتورة
 function addToCart(item) {
     const existing = cart.find(c => c.id === item.id);
     if (existing) existing.qty += 1;
@@ -80,13 +80,18 @@ function addToCart(item) {
     updateCartUI();
 }
 
-// حذف من الفاتورة
 function removeFromCart(id) {
     cart = cart.filter(item => item.id !== id);
     updateCartUI();
 }
 
-// تحديث الفاتورة
+function clearCart() {
+    if(confirm("هل تريد تفريغ السلة؟")) {
+        cart = [];
+        updateCartUI();
+    }
+}
+
 function updateCartUI() {
     const cartItemsDiv = document.getElementById('cartItems');
     const totalPriceSpan = document.getElementById('totalPrice');
@@ -103,8 +108,8 @@ function updateCartUI() {
             cartItemsDiv.innerHTML += `
                 <div style="width:100%; display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
                     <div>
-                        <div style="font-weight:bold; color:#334155;">${item.name}</div>
-                        <div style="font-size:12px;">${item.qty} x ${item.price} ج.م</div>
+                        <div style="font-weight:bold; color:#334155; font-size:14px;">${item.name}</div>
+                        <div style="font-size:12px; color:#64748b;">${item.qty} x ${item.price} ج.م</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-weight:bold; color:#0f766e;">${itemTotal}</span>
@@ -117,25 +122,24 @@ function updateCartUI() {
     totalPriceSpan.innerText = total.toFixed(2);
 }
 
-// إتمام البيع (وإرسال الطلب للمطبخ)
 function checkout() {
     if (cart.length === 0) { alert("السلة فارغة!"); return; }
 
-    const orderNumber = Math.floor(100000 + Math.random() * 900000); // رقم عشوائي للطلب
+    const orderNumber = Math.floor(100000 + Math.random() * 900000);
     
     const orderData = {
         orderNumber: "INV-" + orderNumber,
         type: orderType,
         items: cart,
         totalAmount: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
-        status: "new", // حالة الطلب: جديد (للمطبخ)
+        status: "new", 
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     db.collection("orders").add(orderData).then(() => {
         cart = []; updateCartUI();
     }).catch(err => {
-        alert("تم الحفظ أوفلاين سيتم الرفع عند عودة الإنترنت");
+        alert("تم الحفظ محلياً.. سيتم الرفع عند عودة الإنترنت");
         cart = []; updateCartUI();
     });
 }
@@ -145,12 +149,10 @@ function checkout() {
 // ==========================================
 
 function fetchKitchenOrders() {
-    // هنجيب بس الطلبات اللي لسه متسلمتش للعميل
     db.collection("orders")
       .where("status", "in", ["new", "preparing", "ready"])
       .onSnapshot((snapshot) => {
         
-        // تفريغ العواميد
         const colNew = document.getElementById('colNew');
         const colPrep = document.getElementById('colPrep');
         const colReady = document.getElementById('colReady');
@@ -161,13 +163,11 @@ function fetchKitchenOrders() {
         snapshot.forEach((doc) => {
             const order = { id: doc.id, ...doc.data() };
             
-            // تجهيز كارت الطلب
             let itemsHtml = '';
             order.items.forEach(item => {
                 itemsHtml += `<div class="order-item-row"><span>${item.name}</span> <span>x${item.qty}</span></div>`;
             });
 
-            // تحديد شكل الزرار بناءً على الحالة
             let actionBtn = '';
             if (order.status === 'new') {
                 actionBtn = `<button class="order-action-btn btn-start" onclick="changeOrderStatus('${order.id}', 'preparing')">بدء التحضير</button>`;
@@ -186,38 +186,86 @@ function fetchKitchenOrders() {
                         <span>${order.orderNumber}</span>
                         <span style="color:#0f766e; font-weight:bold;"><i class="fa-solid fa-bell"></i> ${order.type}</span>
                     </div>
-                    <div class="order-card-items">
-                        ${itemsHtml}
-                    </div>
+                    <div class="order-card-items">${itemsHtml}</div>
                     ${actionBtn}
                 </div>
             `;
 
-            // وضع الكارت في العمود المناسب
             if (order.status === 'new') colNew.innerHTML += cardHtml;
             else if (order.status === 'preparing') colPrep.innerHTML += cardHtml;
             else if (order.status === 'ready') colReady.innerHTML += cardHtml;
         });
 
-        // تحديث العدادات
         document.getElementById('countNew').innerText = countNew;
         document.getElementById('countPrep').innerText = countPrep;
         document.getElementById('countReady').innerText = countReady;
 
-        // لو العواميد فاضية، نحط الرسالة الافتراضية
         if(countNew === 0) colNew.innerHTML = '<div class="empty-column"><i class="fa-solid fa-utensils fa-2x"></i><p>لا توجد طلبات</p></div>';
         if(countPrep === 0) colPrep.innerHTML = '<div class="empty-column"><i class="fa-solid fa-utensils fa-2x"></i><p>لا توجد طلبات</p></div>';
         if(countReady === 0) colReady.innerHTML = '<div class="empty-column"><i class="fa-solid fa-utensils fa-2x"></i><p>لا توجد طلبات</p></div>';
     });
 }
 
-// تغيير حالة الطلب في قاعدة البيانات
 function changeOrderStatus(orderId, newStatus) {
     db.collection("orders").doc(orderId).update({
         status: newStatus
     }).catch(err => alert("حدث خطأ يرجى التحقق من الاتصال"));
 }
 
-// تشغيل الوظائف عند فتح السيستم
+// ==========================================
+// قسم إدارة المنتجات
+// ==========================================
+
+function renderProductsTable() {
+    const tbody = document.getElementById('productsTableBody');
+    if (!tbody) return; 
+    
+    tbody.innerHTML = '';
+    if (menuItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">لا توجد منتجات حالياً</td></tr>';
+        return;
+    }
+
+    menuItems.forEach(item => {
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-weight: bold; text-align: right;">${item.name}</td>
+                <td style="color: #0f766e; font-weight: bold; text-align: center;">${item.price} ج.م</td>
+                <td style="text-align: center;"><span style="background: #dcfce7; color: #15803d; padding: 5px 15px; border-radius: 15px; font-size: 12px;">مفعل</span></td>
+                <td style="text-align: center;">
+                    <i class="fa-solid fa-trash-can" style="color: #ef4444; cursor: pointer;" onclick="deleteProduct('${item.id}')"></i>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function addNewProduct() {
+    const name = prompt("أدخل اسم المنتج الجديد:");
+    if (!name) return;
+    
+    const price = prompt("أدخل سعر المنتج:");
+    if (!price || isNaN(price)) {
+        alert("سعر غير صحيح!");
+        return;
+    }
+
+    db.collection("menu").add({
+        name: name,
+        price: Number(price)
+    }).then(() => {
+        alert("تم إضافة المنتج بنجاح!");
+    }).catch(err => alert("تم الحفظ محلياً.. سيتم الرفع عند توفر الإنترنت."));
+}
+
+function deleteProduct(id) {
+    if (confirm("هل أنت متأكد من حذف هذا المنتج نهائياً؟")) {
+        db.collection("menu").doc(id).delete();
+    }
+}
+
+// ==========================================
+// التشغيل التلقائي عند فتح التطبيق
+// ==========================================
 fetchMenu();
 fetchKitchenOrders();
