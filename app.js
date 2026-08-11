@@ -1,7 +1,9 @@
+// 1. إعدادات PWA (الأوفلاين)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log(err)); });
 }
 
+// 2. إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDqxogarptpWWEEP6Ow-Pnt-uyXDOdGGlM",
     authDomain: "angular-polygon-456319-i4.firebaseapp.com",
@@ -15,10 +17,17 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 db.enablePersistence().catch(err => console.log(err));
 
+// ==========================================
+// المتغيرات العامة
+// ==========================================
 let menuItems = [];
 let cart = [];
 let orderType = 'تيك أواي';
+let customers = [];
 
+// ==========================================
+// قسم الكاشير
+// ==========================================
 function setOrderType(type, element) {
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
     element.classList.add('active');
@@ -38,22 +47,13 @@ function fetchMenu() {
 
 function renderMenu() {
     const menuGrid = document.getElementById('menuGrid');
+    if(!menuGrid) return;
     menuGrid.innerHTML = '';
-    
-    if (menuItems.length === 0) {
-        menuGrid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#94a3b8;">لا يوجد أصناف حالياً.</p>';
-        return;
-    }
-
     menuItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'product-card';
         div.onclick = () => addToCart(item);
-        div.innerHTML = `
-            <div class="product-image"><i class="fa-solid fa-image fa-2x"></i></div>
-            <div class="product-name">${item.name}</div>
-            <div class="product-price"><span>${item.price}</span> <span>ج.م</span></div>
-        `;
+        div.innerHTML = `<div class="product-image"><i class="fa-solid fa-image"></i></div><div class="product-name">${item.name}</div><div class="product-price"><span>${item.price}</span> <span>ج.م</span></div>`;
         menuGrid.appendChild(div);
     });
 }
@@ -71,37 +71,22 @@ function removeFromCart(id) {
 }
 
 function clearCart() {
-    if(confirm("هل تريد تفريغ السلة؟")) {
-        cart = [];
-        updateCartUI();
-    }
+    if(confirm("هل تريد تفريغ السلة؟")) { cart = []; updateCartUI(); }
 }
 
 function updateCartUI() {
     const cartItemsDiv = document.getElementById('cartItems');
     const totalPriceSpan = document.getElementById('totalPrice');
+    if(!cartItemsDiv) return;
     
     cartItemsDiv.innerHTML = '';
     let total = 0;
-
     if (cart.length === 0) {
-        cartItemsDiv.innerHTML = '<i class="fa-solid fa-cart-shopping" style="font-size:40px; margin-bottom:10px; opacity:0.5;"></i><p>السلة فارغة</p>';
+        cartItemsDiv.innerHTML = '<p>السلة فارغة</p>';
     } else {
         cart.forEach(item => {
-            const itemTotal = item.price * item.qty;
-            total += itemTotal;
-            cartItemsDiv.innerHTML += `
-                <div style="width:100%; display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
-                    <div>
-                        <div style="font-weight:bold; color:#334155; font-size:14px;">${item.name}</div>
-                        <div style="font-size:12px; color:#64748b;">${item.qty} x ${item.price} ج.م</div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-weight:bold; color:#0f766e;">${itemTotal}</span>
-                        <i class="fa-solid fa-xmark" style="color:#ef4444; cursor:pointer;" onclick="removeFromCart('${item.id}')"></i>
-                    </div>
-                </div>
-            `;
+            total += (item.price * item.qty);
+            cartItemsDiv.innerHTML += `<div style="width:100%; display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee;"><div><div style="font-weight:bold;">${item.name}</div><div style="font-size:12px;">${item.qty} x ${item.price} ج.م</div></div><i class="fa-solid fa-xmark" style="color:#ef4444; cursor:pointer;" onclick="removeFromCart('${item.id}')"></i></div>`;
         });
     }
     totalPriceSpan.innerText = total.toFixed(2);
@@ -109,175 +94,113 @@ function updateCartUI() {
 
 function checkout() {
     if (cart.length === 0) { alert("السلة فارغة!"); return; }
-
-    const orderNumber = Math.floor(100000 + Math.random() * 900000);
-    
     const orderData = {
-        orderNumber: "INV-" + orderNumber,
+        orderNumber: "INV-" + Math.floor(100000 + Math.random() * 900000),
         type: orderType,
         items: cart,
         totalAmount: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
         status: "new", 
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
-
-    db.collection("orders").add(orderData).then(() => {
-        cart = []; updateCartUI();
-    }).catch(err => {
-        alert("تم الحفظ محلياً.. سيتم الرفع عند عودة الإنترنت");
-        cart = []; updateCartUI();
-    });
+    db.collection("orders").add(orderData).then(() => { cart = []; updateCartUI(); }).catch(err => alert("خطأ في الاتصال"));
 }
 
+// ==========================================
+// قسم المطبخ
+// ==========================================
 function fetchKitchenOrders() {
-    db.collection("orders")
-      .where("status", "in", ["new", "preparing", "ready"])
-      .onSnapshot((snapshot) => {
-        
-        const colNew = document.getElementById('colNew');
-        const colPrep = document.getElementById('colPrep');
-        const colReady = document.getElementById('colReady');
-        
+    db.collection("orders").where("status", "in", ["new", "preparing", "ready"]).onSnapshot((snapshot) => {
+        const colNew = document.getElementById('colNew'), colPrep = document.getElementById('colPrep'), colReady = document.getElementById('colReady');
+        if(!colNew) return;
         colNew.innerHTML = ''; colPrep.innerHTML = ''; colReady.innerHTML = '';
-        let countNew = 0, countPrep = 0, countReady = 0;
-
+        let cN=0, cP=0, cR=0;
         snapshot.forEach((doc) => {
             const order = { id: doc.id, ...doc.data() };
-            
-            let itemsHtml = '';
-            order.items.forEach(item => {
-                itemsHtml += `<div class="order-item-row"><span>${item.name}</span> <span>x${item.qty}</span></div>`;
-            });
-
-            let actionBtn = '';
-            if (order.status === 'new') {
-                actionBtn = `<button class="order-action-btn btn-start" onclick="changeOrderStatus('${order.id}', 'preparing')">بدء التحضير</button>`;
-                countNew++;
-            } else if (order.status === 'preparing') {
-                actionBtn = `<button class="order-action-btn btn-ready" onclick="changeOrderStatus('${order.id}', 'ready')">جاهز للتسليم</button>`;
-                countPrep++;
-            } else if (order.status === 'ready') {
-                actionBtn = `<button class="order-action-btn btn-deliver" onclick="changeOrderStatus('${order.id}', 'delivered')"><i class="fa-solid fa-check"></i> تم التسليم</button>`;
-                countReady++;
-            }
-
-            const cardHtml = `
-                <div class="order-card">
-                    <div class="order-card-header">
-                        <span>${order.orderNumber}</span>
-                        <span style="color:#0f766e; font-weight:bold;"><i class="fa-solid fa-bell"></i> ${order.type}</span>
-                    </div>
-                    <div class="order-card-items">${itemsHtml}</div>
-                    ${actionBtn}
-                </div>
-            `;
-
-            if (order.status === 'new') colNew.innerHTML += cardHtml;
-            else if (order.status === 'preparing') colPrep.innerHTML += cardHtml;
-            else if (order.status === 'ready') colReady.innerHTML += cardHtml;
+            let itemsHtml = order.items.map(i => `<div class="order-item-row"><span>${i.name}</span> <span>x${i.qty}</span></div>`).join('');
+            let btn = order.status === 'new' ? `<button class="order-action-btn btn-start" onclick="changeOrderStatus('${order.id}', 'preparing')">بدء التحضير</button>` : 
+                      order.status === 'preparing' ? `<button class="order-action-btn btn-ready" onclick="changeOrderStatus('${order.id}', 'ready')">جاهز للتسليم</button>` :
+                      `<button class="order-action-btn btn-deliver" onclick="changeOrderStatus('${order.id}', 'delivered')">تم التسليم</button>`;
+            const card = `<div class="order-card"><div class="order-card-header"><span>${order.orderNumber}</span><span>${order.type}</span></div><div class="order-card-items">${itemsHtml}</div>${btn}</div>`;
+            if (order.status === 'new') { colNew.innerHTML += card; cN++; }
+            else if (order.status === 'preparing') { colPrep.innerHTML += card; cP++; }
+            else if (order.status === 'ready') { colReady.innerHTML += card; cR++; }
         });
-
-        document.getElementById('countNew').innerText = countNew;
-        document.getElementById('countPrep').innerText = countPrep;
-        document.getElementById('countReady').innerText = countReady;
-
-        if(countNew === 0) colNew.innerHTML = '<div class="empty-column"><i class="fa-solid fa-utensils fa-2x"></i><p>لا توجد طلبات</p></div>';
-        if(countPrep === 0) colPrep.innerHTML = '<div class="empty-column"><i class="fa-solid fa-utensils fa-2x"></i><p>لا توجد طلبات</p></div>';
-        if(countReady === 0) colReady.innerHTML = '<div class="empty-column"><i class="fa-solid fa-utensils fa-2x"></i><p>لا توجد طلبات</p></div>';
+        document.getElementById('countNew').innerText = cN; document.getElementById('countPrep').innerText = cP; document.getElementById('countReady').innerText = cR;
     });
 }
 
 function changeOrderStatus(orderId, newStatus) {
-    db.collection("orders").doc(orderId).update({
-        status: newStatus
-    }).catch(err => alert("حدث خطأ يرجى التحقق من الاتصال"));
+    db.collection("orders").doc(orderId).update({ status: newStatus }).catch(err => alert("خطأ"));
 }
 
+// ==========================================
+// قسم المنتجات
+// ==========================================
 function renderProductsTable() {
     const tbody = document.getElementById('productsTableBody');
     if (!tbody) return; 
-    
     tbody.innerHTML = '';
-    if (menuItems.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">لا توجد منتجات حالياً</td></tr>';
-        return;
-    }
-
     menuItems.forEach(item => {
-        tbody.innerHTML += `
-            <tr>
-                <td style="font-weight: bold; text-align: right;">${item.name}</td>
-                <td style="color: #0f766e; font-weight: bold; text-align: center;">${item.price} ج.م</td>
-                <td style="text-align: center;"><span style="background: #dcfce7; color: #15803d; padding: 5px 15px; border-radius: 15px; font-size: 12px;">مفعل</span></td>
-                <td style="text-align: center;">
-                    <i class="fa-solid fa-trash-can" style="color: #ef4444; cursor: pointer;" onclick="deleteProduct('${item.id}')"></i>
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML += `<tr><td style="font-weight:bold;">${item.name}</td><td style="text-align:center;">${item.price}</td><td style="text-align:center;">مفعل</td><td style="text-align:center;"><i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer;" onclick="deleteProduct('${item.id}')"></i></td></tr>`;
     });
 }
 
 function addNewProduct() {
-    const name = prompt("أدخل اسم المنتج الجديد:");
-    if (!name) return;
-    
-    const price = prompt("أدخل سعر المنتج:");
-    if (!price || isNaN(price)) {
-        alert("سعر غير صحيح!");
-        return;
-    }
-
-    db.collection("menu").add({
-        name: name,
-        price: Number(price)
-    }).then(() => {
-        alert("تم إضافة المنتج بنجاح!");
-    }).catch(err => alert("تم الحفظ محلياً.. سيتم الرفع عند توفر الإنترنت."));
+    const name = prompt("اسم المنتج:");
+    const price = prompt("السعر:");
+    if (name && price) db.collection("menu").add({ name, price: Number(price) });
 }
 
 function deleteProduct(id) {
-    if (confirm("هل أنت متأكد من حذف هذا المنتج نهائياً؟")) {
-        db.collection("menu").doc(id).delete();
-    }
+    if (confirm("حذف المنتج؟")) db.collection("menu").doc(id).delete();
 }
 
-// دالة سحب وعرض المبيعات
+// ==========================================
+// قسم المبيعات والداشبورد
+// ==========================================
 function fetchSales() {
-    db.collection("orders")
-      .orderBy("timestamp", "desc")
-      .onSnapshot((snapshot) => {
+    db.collection("orders").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         const tbody = document.getElementById('salesTableBody');
         if (!tbody) return;
-        
         tbody.innerHTML = '';
-        let totalCash = 0;
-
+        let total = 0;
         snapshot.forEach((doc) => {
-            const order = doc.data();
-            const date = order.timestamp ? order.timestamp.toDate().toLocaleString('ar-EG') : 'الآن';
-            
-            totalCash += order.totalAmount;
-
-            // تحديد لون الحالة
-            let statusBadge = '<span style="color:#15803d; font-weight:bold;">مكتملة</span>';
-            if(order.status !== 'delivered' && order.status !== 'ready' && order.status !== 'preparing' && order.status !== 'new') {
-                statusBadge = '<span style="color:#64748b; font-weight:bold;">-</span>';
-            }
-
-            tbody.innerHTML += `
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding:15px; text-align:right;">${order.orderNumber}</td>
-                    <td style="padding:15px; text-align:center;">${date}</td>
-                    <td style="padding:15px; text-align:center;">${order.type}</td>
-                    <td style="padding:15px; text-align:center; font-weight:bold; color:#0f766e;">${order.totalAmount} ج.م</td>
-                    <td style="padding:15px; text-align:center;">${statusBadge}</td>
-                </tr>
-            `;
+            const o = doc.data();
+            total += o.totalAmount;
+            tbody.innerHTML += `<tr><td>${o.orderNumber}</td><td>${o.timestamp ? o.timestamp.toDate().toLocaleString('ar-EG') : 'الآن'}</td><td>${o.type}</td><td>${o.totalAmount} ج.م</td><td>مكتملة</td></tr>`;
         });
-        document.getElementById('totalSalesHeader').innerText = totalCash.toFixed(2) + ' ج.م';
+        document.getElementById('totalSalesHeader').innerText = total.toFixed(2) + ' ج.م';
+        document.getElementById('totalRevenue').innerText = total.toFixed(2) + ' ج.م';
+        document.getElementById('totalOrders').innerText = snapshot.size;
     });
 }
 
+// ==========================================
+// قسم العملاء
+// ==========================================
+function fetchCustomers() {
+    db.collection("customers").onSnapshot((snapshot) => {
+        const tbody = document.getElementById('customersTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        snapshot.forEach((doc) => {
+            const c = doc.data();
+            tbody.innerHTML += `<tr><td style="font-weight:bold;">${c.name}</td><td>${c.phone || '-'}</td><td>${c.address || '-'}</td><td>${c.totalPurchases || 0}</td><td><i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer;" onclick="deleteCustomer('${doc.id}')"></i></td></tr>`;
+        });
+    });
+}
+
+function addNewCustomer() {
+    const name = prompt("اسم العميل:");
+    if(name) db.collection("customers").add({ name, totalPurchases: 0 });
+}
+
+function deleteCustomer(id) {
+    if(confirm("حذف العميل؟")) db.collection("customers").doc(id).delete();
+}
+
+// تنفيذ العمليات
 fetchMenu();
 fetchKitchenOrders();
 fetchSales();
+fetchCustomers();
