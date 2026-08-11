@@ -223,7 +223,6 @@
                 </table>
             </div>
 
-            <!-- سجل المبيعات اللي اتضاف جديد -->
             <div id="salesScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                     <div>
@@ -241,13 +240,33 @@
                             <th style="text-align: center;">الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="salesTableBody">
+                    <tbody id="salesTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- شاشة العملاء اللي اتضافت جديد -->
+            <div id="customersScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="addNewCustomer()">+ عميل جديد</button>
+                    <input type="text" class="search-bar" style="width: 300px; margin: 0;" placeholder="ابحث بالاسم أو رقم الهاتف...">
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: right;">اسم العميل</th>
+                            <th style="text-align: center;">رقم الهاتف</th>
+                            <th style="text-align: center;">عنوان التوصيل</th>
+                            <th style="text-align: center;">إجمالي المشتريات</th>
+                            <th style="text-align: center;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">جاري تحميل العملاء...</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <div id="dashboardScreen" class="screen"><h2 style="padding: 20px;">لوحة المبيعات (قيد التطوير)</h2></div>
-            <div id="customersScreen" class="screen"><h2 style="padding: 20px;">العملاء (قيد التطوير)</h2></div>
         </div>
     </div>
 
