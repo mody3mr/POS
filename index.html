@@ -34,13 +34,15 @@
         .header { background-color: white; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border-color); }
         .header-title { font-size: 18px; font-weight: bold; color: var(--text-dark); }
         .header-actions { display: flex; align-items: center; gap: 15px; }
-        .sync-status { display: flex; align-items: center; gap: 5px; font-size: 14px; color: #64748b; }
-        .sync-dot { width: 8px; height: 8px; background-color: #facc15; border-radius: 50%; }
+        
+        /* مؤشر الاتصال الواضح */
+        .sync-status { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; padding: 5px 12px; background: #f1f5f9; border-radius: 20px; border: 1px solid var(--border-color); }
+        .sync-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; }
+        .sync-dot.offline { background-color: #ef4444; }
+
         .branch-select { padding: 5px 10px; border: 1px solid var(--border-color); border-radius: 5px; background: white; color: var(--text-dark); }
 
         .content-area { flex: 1; overflow: hidden; position: relative; }
-        
-        /* التعديل الجذري لحل المشكلة هنا */
         .screen { display: none !important; height: 100%; width: 100%; flex-direction: column; }
         .screen.active { display: flex !important; }
 
@@ -125,7 +127,9 @@
         <div class="header">
             <div class="header-title" id="pageTitle">شاشة الكاشير</div>
             <div class="header-actions">
-                <div class="sync-status"><span class="sync-dot"></span> متصل بالإنترنت</div>
+                <div class="sync-status" id="connectionStatus">
+                    <span class="sync-dot" id="syncDot"></span> <span id="syncText">متصل بالإنترنت</span>
+                </div>
                 <select class="branch-select"><option>الفرع الرئيسي</option></select>
             </div>
         </div>
@@ -135,8 +139,8 @@
             <div id="cashierScreen" class="screen cashier-screen active">
                 <div class="products-panel">
                     <input type="text" class="search-bar" placeholder="امسح الباركود أو ابحث عن منتج...">
-                    <div class="categories-scroll">
-                        <div class="category-pill active">الكل</div>
+                    <div class="categories-scroll" id="categoriesScroll">
+                        <div class="category-pill active" onclick="filterByCategory('الكل', this)">الكل</div>
                     </div>
                     <div class="products-grid" id="menuGrid">
                         <p style="grid-column: 1/-1; text-align:center;">جاري تحميل المنتجات...</p>
@@ -198,9 +202,10 @@
                     <thead>
                         <tr>
                             <th style="text-align: right;">اسم المنتج</th>
-                            <th style="text-align: center;">سعر البيع</th>
+                            <th style="text-align: center;">السعر</th>
+                            <th style="text-align: center;">القسم</th>
                             <th style="text-align: center;">الحالة</th>
-                            <th style="text-align: center;">الإجراءات</th>
+                            <th style="text-align: center;">الإجراءات (تعديل / حذف)</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody"></tbody>
@@ -209,18 +214,17 @@
 
             <div id="categoriesScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="alert('برمجة إضافة قسم قريباً')">+ قسم جديد</button>
+                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="addNewCategory()">+ قسم جديد</button>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th style="text-align: right;">اسم القسم</th>
-                            <th style="text-align: center;">عدد المنتجات</th>
                             <th style="text-align: center;">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="categoriesTableBody">
-                        <tr><td colspan="3" style="text-align:center; padding: 20px; color: #94a3b8;">لا توجد أقسام حالياً</td></tr>
+                        <tr><td colspan="2" style="text-align:center; padding: 20px; color: #94a3b8;">جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -262,12 +266,23 @@
                         </tr>
                     </thead>
                     <tbody id="customersTableBody">
-                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">جاري تحميل العملاء...</td></tr>
+                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
 
-            <div id="dashboardScreen" class="screen"><h2 style="padding: 20px;">لوحة المبيعات (قيد التطوير)</h2></div>
+            <div id="dashboardScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; background-color: var(--primary-bg);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h4 style="color: #64748b; margin: 0 0 10px 0;">إجمالي الإيرادات</h4>
+                        <h2 id="totalRevenue" style="color: #0f766e; margin: 0;">0.00 ج.م</h2>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h4 style="color: #64748b; margin: 0 0 10px 0;">عدد الفواتير</h4>
+                        <h2 id="totalOrders" style="color: #1e293b; margin: 0;">0</h2>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
