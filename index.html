@@ -11,7 +11,6 @@
         .btn-install { background-color: #27ae60; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; display: none; }
         .content { margin-top: 60px; display: flex; width: 100%; height: calc(100vh - 60px); }
         
-        /* قسم المنيو */
         .menu-section { flex: 3; padding: 20px; overflow-y: auto; }
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
         .menu-item { background: white; padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid transparent; }
@@ -19,7 +18,6 @@
         .menu-item h4 { margin: 10px 0 5px; color: #333; }
         .menu-item p { margin: 0; color: #27ae60; font-weight: bold; }
 
-        /* قسم الفاتورة */
         .cart-section { flex: 1.2; background-color: #fff; border-right: 2px solid #ddd; padding: 20px; display: flex; flex-direction: column; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
         .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 10px; }
         .cart-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; }
@@ -38,14 +36,12 @@
     </div>
 
     <div class="content">
-        <!-- قسم قائمة الطعام -->
         <div class="menu-section">
             <div class="menu-grid" id="menuGrid">
-                <!-- الأصناف هتترسم هنا عن طريق الجافاسكريبت -->
+                <p>جاري تحميل الأصناف...</p>
             </div>
         </div>
 
-        <!-- قسم الفاتورة الحالية -->
         <div class="cart-section">
             <h3 style="margin-top:0;">الفاتورة الحالية</h3>
             <div class="cart-items" id="cartItems">
@@ -54,11 +50,11 @@
             <div class="total-section">
                 <h2 style="margin: 0; color: #2c3e50;">الإجمالي: <span id="totalPrice">0</span> ج.م</h2>
             </div>
-            <button class="btn-checkout" onclick="printInvoice()">تأكيد وطباعة الفاتورة</button>
+            <button class="btn-checkout" onclick="checkout()">تأكيد وطباعة الفاتورة</button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- PWA Install Script -->
     <script>
         let deferredPrompt;
         const installBtn = document.getElementById('installBtn');
@@ -75,5 +71,12 @@
             }
         });
     </script>
+
+    <!-- مكتبات Firebase الأساسية وقاعدة البيانات -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- ربط ملف التشغيل الأساسي بتاعنا -->
+    <script src="app.js"></script>
 </body>
 </html>
