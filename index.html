@@ -39,10 +39,12 @@
         .branch-select { padding: 5px 10px; border: 1px solid var(--border-color); border-radius: 5px; background: white; color: var(--text-dark); }
 
         .content-area { flex: 1; overflow: hidden; position: relative; }
-        .screen { display: none; height: 100%; width: 100%; }
-        .screen.active { display: flex; }
+        
+        /* التعديل الجذري لحل المشكلة هنا */
+        .screen { display: none !important; height: 100%; width: 100%; flex-direction: column; }
+        .screen.active { display: flex !important; }
 
-        .cashier-screen { display: flex; }
+        .cashier-screen { flex-direction: row; }
         .cart-panel { width: 350px; background: white; border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
         .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .order-types { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -67,7 +69,7 @@
         .product-name { font-size: 14px; font-weight: bold; color: var(--text-dark); margin-bottom: 5px; flex: 1; }
         .product-price { color: var(--active-color); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
 
-        .kitchen-screen { display: flex; gap: 15px; padding: 15px; width: 100%; box-sizing: border-box; background-color: white; }
+        .kitchen-screen { flex-direction: row; gap: 15px; padding: 15px; width: 100%; box-sizing: border-box; background-color: white; }
         .kanban-column { flex: 1; display: flex; flex-direction: column; background-color: #fafafa; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; }
         .kanban-header { padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .kanban-header.new { background-color: #fee2e2; color: #b91c1c; }
@@ -244,7 +246,6 @@
                 </table>
             </div>
 
-            <!-- شاشة العملاء اللي اتضافت جديد -->
             <div id="customersScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="addNewCustomer()">+ عميل جديد</button>
