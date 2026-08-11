@@ -3,80 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كاشير المطعم</title>
+    <title>نظام إدارة المطعم</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background-color: #f4f4f9; display: flex; height: 100vh; overflow: hidden; }
-        .header { background-color: #2c3e50; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: absolute; top: 0; width: 100%; box-sizing: border-box; height: 60px; z-index: 10; }
-        .btn-install { background-color: #27ae60; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; display: none; }
-        .content { margin-top: 60px; display: flex; width: 100%; height: calc(100vh - 60px); }
-        
-        .menu-section { flex: 3; padding: 20px; overflow-y: auto; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
-        .menu-item { background: white; padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid transparent; }
-        .menu-item:hover { border-color: #3498db; transform: translateY(-2px); }
-        .menu-item h4 { margin: 10px 0 5px; color: #333; }
-        .menu-item p { margin: 0; color: #27ae60; font-weight: bold; }
+        /* الألوان والخطوط الأساسية */
+        :root {
+            --primary-bg: #f4f6f8;
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #0f766e;
+            --active-color: #0f766e;
+            --text-light: #ffffff;
+            --text-dark: #334155;
+            --border-color: #e2e8f0;
+        }
 
-        .cart-section { flex: 1.2; background-color: #fff; border-right: 2px solid #ddd; padding: 20px; display: flex; flex-direction: column; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
-        .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 10px; }
-        .cart-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; }
-        .cart-row:last-child { border-bottom: none; }
-        .cart-row button { background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 3px 8px; }
-        .total-section { text-align: left; margin-bottom: 15px; }
-        .btn-checkout { background-color: #2980b9; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: 0.2s; }
-        .btn-checkout:hover { background-color: #2471a3; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; background-color: var(--primary-bg); overflow: hidden; }
+
+        /* ----- الشريط الجانبي (Sidebar) ----- */
+        .sidebar { width: 250px; background-color: var(--sidebar-bg); color: var(--text-light); display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
+        .logo-area { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .logo-area img { width: 40px; height: 40px; border-radius: 5px; }
+        .nav-links { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .nav-link { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: #cbd5e1; text-decoration: none; cursor: pointer; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: var(--sidebar-hover); color: white; border-right: 4px solid #34d399; }
+        .nav-link i { width: 20px; text-align: center; }
+        .user-area { padding: 15px; background-color: rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 35px; height: 35px; background-color: #0f766e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        /* ----- المنطقة الرئيسية ----- */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100%; }
+        .header { background-color: white; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border-color); }
+        .header-title { font-size: 18px; font-weight: bold; color: var(--text-dark); }
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .sync-status { display: flex; align-items: center; gap: 5px; font-size: 14px; color: #64748b; }
+        .sync-dot { width: 8px; height: 8px; background-color: #facc15; border-radius: 50%; }
+        .branch-select { padding: 5px 10px; border: 1px solid var(--border-color); border-radius: 5px; background: white; color: var(--text-dark); }
+
+        .content-area { flex: 1; overflow: hidden; position: relative; }
+        .screen { display: none; height: 100%; width: 100%; }
+        .screen.active { display: flex; }
+
+        /* ----- تصميم شاشة الكاشير ----- */
+        .cashier-screen { display: flex; }
+        .cart-panel { width: 350px; background: white; border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .order-types { display: flex; gap: 10px; margin-bottom: 15px; }
+        .type-btn { flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .type-btn.active { background: var(--active-color); color: white; border-color: var(--active-color); }
+        .cart-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; }
+        .cart-totals { margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: #64748b; }
+        .grand-total { display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; color: var(--text-dark); margin-bottom: 15px; }
+        .btn-checkout { width: 100%; padding: 15px; background-color: var(--active-color); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-checkout:hover { background-color: #0d645e; }
+
+        .products-panel { flex: 1; display: flex; flex-direction: column; padding: 15px; background-color: var(--primary-bg); }
+        .search-bar { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; outline: none; box-sizing: border-box; }
+        .categories-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+        .category-pill { padding: 8px 15px; background: white; border: 1px solid var(--border-color); border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 14px; }
+        .category-pill.active { background: var(--active-color); color: white; border-color: var(--active-color); }
+        .products-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; align-content: start; }
+        .product-card { background: white; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-direction: column; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .product-image { width: 100%; height: 120px; background-color: #e2e8f0; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: #94a3b8; }
+        .product-name { font-size: 14px; font-weight: bold; color: var(--text-dark); margin-bottom: 5px; flex: 1; }
+        .product-price { color: var(--active-color); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+
+        /* ----- تصميم شاشة المطبخ ----- */
+        .kitchen-screen { display: flex; gap: 15px; padding: 15px; width: 100%; box-sizing: border-box; background-color: white; }
+        .kanban-column { flex: 1; display: flex; flex-direction: column; background-color: #fafafa; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; }
+        .kanban-header { padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .kanban-header.new { background-color: #fee2e2; color: #b91c1c; }
+        .kanban-header.preparing { background-color: #fef3c7; color: #b45309; }
+        .kanban-header.ready { background-color: #dcfce7; color: #15803d; }
+        .order-count { background: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; color: #333; }
+        .kanban-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .order-card { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .order-card-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #64748b; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+        .order-card-items { margin-bottom: 15px; }
+        .order-item-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
+        .order-action-btn { width: 100%; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-start { background-color: var(--active-color); }
+        .btn-ready { background-color: #10b981; }
+        .btn-deliver { background-color: #3b82f6; }
+        .empty-column { text-align: center; color: #cbd5e1; margin-top: 50px; }
+
+        /* ----- تصميم الجداول العامة (للمنتجات والأقسام) ----- */
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+        .data-table thead { background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+        .data-table th { padding: 15px; color: #475569; font-weight: bold; }
+        .data-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        .data-table tr:last-child td { border-bottom: none; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>الكاشير</h2>
-        <button id="installBtn" class="btn-install">تثبيت البرنامج</button>
+    <!-- الشريط الجانبي -->
+    <div class="sidebar">
+        <div class="logo-area">
+            <div style="width:40px; height:40px; background:white; border-radius:5px;"></div>
+            <h3>Coffee 101</h3>
+        </div>
+        
+        <div class="nav-links">
+            <a class="nav-link active" onclick="switchScreen('cashier', this)"><i class="fa-solid fa-desktop"></i> شاشة الكاشير</a>
+            <a class="nav-link" onclick="switchScreen('kitchen', this)"><i class="fa-solid fa-fire-burner"></i> شاشة المطبخ</a>
+            <a class="nav-link" onclick="switchScreen('dashboard', this)"><i class="fa-solid fa-chart-line"></i> لوحة المبيعات</a>
+            <a class="nav-link" onclick="switchScreen('customers', this)"><i class="fa-solid fa-users"></i> العملاء</a>
+            <a class="nav-link" onclick="switchScreen('products', this)"><i class="fa-solid fa-box-open"></i> المنتجات</a>
+            <a class="nav-link" onclick="switchScreen('categories', this)"><i class="fa-solid fa-layer-group"></i> الأقسام</a>
+            <a class="nav-link" onclick="switchScreen('sales', this)"><i class="fa-solid fa-file-invoice-dollar"></i> سجل المبيعات</a>
+        </div>
+
+        <div class="user-area">
+            <div class="user-avatar">م</div>
+            <div>
+                <div style="font-size: 14px; font-weight: bold;">المدير</div>
+                <div style="font-size: 12px; color: #94a3b8;">مدير النظام</div>
+            </div>
+        </div>
     </div>
 
-    <div class="content">
-        <div class="menu-section">
-            <div class="menu-grid" id="menuGrid">
-                <p>جاري تحميل الأصناف...</p>
+    <!-- المنطقة الرئيسية -->
+    <div class="main-wrapper">
+        <div class="header">
+            <div class="header-title" id="pageTitle">شاشة الكاشير</div>
+            <div class="header-actions">
+                <div class="sync-status"><span class="sync-dot"></span> متصل بالإنترنت</div>
+                <select class="branch-select"><option>الفرع الرئيسي</option></select>
             </div>
         </div>
 
-        <div class="cart-section">
-            <h3 style="margin-top:0;">الفاتورة الحالية</h3>
-            <div class="cart-items" id="cartItems">
-                <p style="color: gray; text-align: center; margin-top: 50px;">لم يتم إضافة أصناف</p>
+        <div class="content-area">
+            
+            <!-- 1. شاشة الكاشير -->
+            <div id="cashierScreen" class="screen cashier-screen active">
+                <div class="products-panel">
+                    <input type="text" class="search-bar" placeholder="امسح الباركود أو ابحث عن منتج...">
+                    <div class="categories-scroll">
+                        <div class="category-pill active">الكل</div>
+                    </div>
+                    <div class="products-grid" id="menuGrid">
+                        <p style="grid-column: 1/-1; text-align:center;">جاري تحميل المنتجات...</p>
+                    </div>
+                </div>
+
+                <div class="cart-panel">
+                    <div class="cart-header">
+                        <h4>سلة المبيعات</h4>
+                        <i class="fa-solid fa-trash-can" style="color: #ef4444; cursor: pointer;" onclick="clearCart()"></i>
+                    </div>
+                    <div class="order-types">
+                        <div class="type-btn active" onclick="setOrderType('تيك أواي', this)"><i class="fa-solid fa-bag-shopping"></i> تيك أواي</div>
+                        <div class="type-btn" onclick="setOrderType('دليفري', this)"><i class="fa-solid fa-motorcycle"></i> دليفري</div>
+                        <div class="type-btn" onclick="setOrderType('صالة', this)"><i class="fa-solid fa-chair"></i> صالة</div>
+                    </div>
+                    <div class="cart-items" id="cartItems">
+                        <p>السلة فارغة</p>
+                    </div>
+                    <div class="cart-totals">
+                        <div class="total-row"><span>المجموع الفرعي</span> <span>0.00</span></div>
+                        <div class="total-row"><span>الضريبة</span> <span>0.00</span></div>
+                        <div class="grand-total"><span>الإجمالي الكلي</span> <span id="totalPrice">0.00</span></div>
+                        <button class="btn-checkout" onclick="checkout()">إتمام البيع</button>
+                    </div>
+                </div>
             </div>
-            <div class="total-section">
-                <h2 style="margin: 0; color: #2c3e50;">الإجمالي: <span id="totalPrice">0</span> ج.م</h2>
+
+            <!-- 2. شاشة المطبخ -->
+            <div id="kitchenScreen" class="screen kitchen-screen">
+                <div class="kanban-column">
+                    <div class="kanban-header new">
+                        <span><i class="fa-solid fa-asterisk"></i> جديد</span>
+                        <span class="order-count" id="countNew">0</span>
+                    </div>
+                    <div class="kanban-body" id="colNew"></div>
+                </div>
+                <div class="kanban-column">
+                    <div class="kanban-header preparing">
+                        <span><i class="fa-solid fa-fire"></i> جاري التحضير</span>
+                        <span class="order-count" id="countPrep">0</span>
+                    </div>
+                    <div class="kanban-body" id="colPrep"></div>
+                </div>
+                <div class="kanban-column">
+                    <div class="kanban-header ready">
+                        <span><i class="fa-solid fa-check-double"></i> جاهز</span>
+                        <span class="order-count" id="countReady">0</span>
+                    </div>
+                    <div class="kanban-body" id="colReady"></div>
+                </div>
             </div>
-            <button class="btn-checkout" onclick="checkout()">تأكيد وطباعة الفاتورة</button>
+
+            <!-- 3. شاشة المنتجات -->
+            <div id="productsScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="addNewProduct()">+ منتج جديد</button>
+                    <input type="text" class="search-bar" style="width: 300px; margin: 0;" placeholder="ابحث بالاسم...">
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: right;">اسم المنتج</th>
+                            <th style="text-align: center;">سعر البيع</th>
+                            <th style="text-align: center;">الحالة</th>
+                            <th style="text-align: center;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 4. شاشة الأقسام -->
+            <div id="categoriesScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="alert('برمجة إضافة قسم قريباً')">+ قسم جديد</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: right;">اسم القسم</th>
+                            <th style="text-align: center;">عدد المنتجات</th>
+                            <th style="text-align: center;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
+                        <tr><td colspan="3" style="text-align:center; padding: 20px; color: #94a3b8;">لا توجد أقسام حالياً</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- باقي الشاشات (قيد التطوير) -->
+            <div id="dashboardScreen" class="screen"><h2 style="padding: 20px;">لوحة المبيعات (قيد التطوير)</h2></div>
+            <div id="customersScreen" class="screen"><h2 style="padding: 20px;">العملاء (قيد التطوير)</h2></div>
+            <div id="salesScreen" class="screen"><h2 style="padding: 20px;">سجل المبيعات (قيد التطوير)</h2></div>
+
         </div>
     </div>
 
-    <!-- PWA Install Script -->
-    <script>
-        let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'block';
-        });
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt = null;
-                installBtn.style.display = 'none';
-            }
-        });
-    </script>
-
-    <!-- مكتبات Firebase الأساسية وقاعدة البيانات -->
+    <!-- سكريبتات Firebase الأساسية -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <!-- ربط ملف التشغيل الأساسي بتاعنا -->
+    <!-- ربط ملف العمليات -->
     <script src="app.js"></script>
+    
+    <script>
+        // دالة التنقل بين الشاشات
+        function switchScreen(screenName, element) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(screenName + 'Screen').classList.add('active');
+            if(element) {
+                element.classList.add('active');
+                document.getElementById('pageTitle').innerText = element.innerText;
+            }
+        }
+    </script>
 </body>
 </html>
