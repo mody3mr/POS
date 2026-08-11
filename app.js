@@ -37,9 +37,7 @@ function setOrderType(type, element) {
 function fetchMenu() {
     db.collection("menu").onSnapshot((snapshot) => {
         menuItems = [];
-        snapshot.forEach((doc) => {
-            menuItems.push({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach((doc) => { menuItems.push({ id: doc.id, ...doc.data() }); });
         renderMenu(); 
         renderProductsTable(); 
     });
@@ -78,7 +76,6 @@ function updateCartUI() {
     const cartItemsDiv = document.getElementById('cartItems');
     const totalPriceSpan = document.getElementById('totalPrice');
     if(!cartItemsDiv) return;
-    
     cartItemsDiv.innerHTML = '';
     let total = 0;
     if (cart.length === 0) {
@@ -102,7 +99,18 @@ function checkout() {
         status: "new", 
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection("orders").add(orderData).then(() => { cart = []; updateCartUI(); }).catch(err => alert("خطأ في الاتصال"));
+    db.collection("orders").add(orderData).then((docRef) => {
+        if(confirm("تم تسجيل الطلب! هل تود طباعة الفاتورة؟")) { printOrder(orderData); }
+        cart = []; updateCartUI();
+    }).catch(err => alert("خطأ في الاتصال"));
+}
+
+function printOrder(orderData) {
+    let itemsHtml = orderData.items.map(i => `<div style="display:flex; justify-content:space-between;"><span>${i.qty} x ${i.name}</span><span>${(i.price * i.qty).toFixed(2)}</span></div>`).join('');
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`<html dir="rtl"><body style="font-family:sans-serif; padding:20px; width:300px;"><h2>Coffee 101</h2><p>فاتورة: ${orderData.orderNumber}</p><hr>${itemsHtml}<hr><h3>الإجمالي: ${orderData.totalAmount.toFixed(2)} ج.م</h3></body></html>`);
+    printWindow.document.close();
+    printWindow.print();
 }
 
 // ==========================================
@@ -134,7 +142,7 @@ function changeOrderStatus(orderId, newStatus) {
 }
 
 // ==========================================
-// قسم المنتجات
+// قسم المنتجات والعملاء
 // ==========================================
 function renderProductsTable() {
     const tbody = document.getElementById('productsTableBody');
@@ -155,9 +163,6 @@ function deleteProduct(id) {
     if (confirm("حذف المنتج؟")) db.collection("menu").doc(id).delete();
 }
 
-// ==========================================
-// قسم المبيعات والداشبورد
-// ==========================================
 function fetchSales() {
     db.collection("orders").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         const tbody = document.getElementById('salesTableBody');
@@ -175,9 +180,6 @@ function fetchSales() {
     });
 }
 
-// ==========================================
-// قسم العملاء
-// ==========================================
 function fetchCustomers() {
     db.collection("customers").onSnapshot((snapshot) => {
         const tbody = document.getElementById('customersTableBody');
@@ -199,7 +201,6 @@ function deleteCustomer(id) {
     if(confirm("حذف العميل؟")) db.collection("customers").doc(id).delete();
 }
 
-// تنفيذ العمليات
 fetchMenu();
 fetchKitchenOrders();
 fetchSales();
