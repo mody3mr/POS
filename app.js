@@ -36,7 +36,7 @@ let zones = [];
 let cart = [];
 let orderType = 'تيك أواي';
 let deliveryFee = 0;
-let tableCount = 10; // افتراضي
+let tableCount = 10;
 
 // ==========================================
 // 4. نظام تسجيل الدخول والصلاحيات
@@ -81,19 +81,16 @@ function applyRoles() {
     links.forEach(link => {
         let roleRequired = link.getAttribute('data-role');
         if (currentUser.role === 'admin') {
-            link.style.display = 'flex'; // الأدمن يشوف كل حاجة
+            link.style.display = 'flex'; 
         } else if (currentUser.role === 'cashier') {
-            // الكاشير يشوف الكاشير والعملاء وتقفيل الوردية
             if(['cashier'].includes(roleRequired)) link.style.display = 'flex';
             else link.style.display = 'none';
         } else if (currentUser.role === 'kitchen') {
-            // المطبخ يشوف المطبخ بس
             if(['kitchen'].includes(roleRequired)) link.style.display = 'flex';
             else link.style.display = 'none';
         }
     });
 
-    // توجيه تلقائي للشاشة المناسبة
     if(currentUser.role === 'kitchen') switchScreen('kitchen', document.querySelector('[onclick="switchScreen(\'kitchen\', this)"]'));
     else switchScreen('cashier', document.querySelector('[onclick="switchScreen(\'cashier\', this)"]'));
 }
@@ -106,7 +103,6 @@ function checkInternetConnection() {
     const syncText = document.getElementById('syncText');
     
     if (navigator.onLine) {
-        // فحص فعلي للإنترنت بطلب خفيف
         fetch('https://jsonplaceholder.typicode.com/todos/1', { method: 'HEAD', mode: 'no-cors' })
         .then(() => {
             syncDot.className = 'sync-dot online';
@@ -120,7 +116,7 @@ function checkInternetConnection() {
         syncText.innerText = 'غير متصل بالإنترنت';
     }
 }
-setInterval(checkInternetConnection, 5000); // فحص كل 5 ثواني
+setInterval(checkInternetConnection, 5000);
 window.addEventListener('online', checkInternetConnection);
 window.addEventListener('offline', checkInternetConnection);
 
@@ -129,7 +125,7 @@ window.addEventListener('offline', checkInternetConnection);
 // ==========================================
 function changeBranch() {
     currentBranch = document.getElementById('branchSelector').value;
-    initApp(); // إعادة تحميل الداتا بناءً على الفرع
+    initApp(); 
 }
 
 function loadSettings() {
@@ -329,7 +325,7 @@ function openCustomerModal() {
 function deleteCustomer(id) { if(confirm("حذف العميل؟")) db.collection("customers").doc(id).delete(); }
 
 // ==========================================
-// 9. الطيارين (الدليفري)
+// 9. الطيارين (الدليفري) وتقاريرهم
 // ==========================================
 function fetchPilots() {
     db.collection("pilots").onSnapshot((snapshot) => {
@@ -364,8 +360,73 @@ function openPilotModal() {
     if(name) db.collection("pilots").add({ name, phone, hireDate: firebase.firestore.FieldValue.serverTimestamp(), ordersThisMonth: 0 });
 }
 function deletePilot(id) { if(confirm("حذف الطيار؟")) db.collection("pilots").doc(id).delete(); }
+
+// دالة تقرير الطيار التفصيلية
 function printPilotReport(pilotId) {
-    alert("سيتم طباعة تقرير مفصل للطيار برقم: " + pilotId + "\n(جاري برمجة التقرير التفصيلي للطباعة)");
+    let pilot = pilots.find(p => p.id === pilotId);
+    if(!pilot) return;
+
+    document.getElementById('reportPilotName').innerHTML = `<i class="fa-solid fa-motorcycle" style="color: #0f766e;"></i> تقرير الطيار: ${pilot.name}`;
+    
+    db.collection("orders")
+      .where("pilotId", "==", pilotId)
+      .orderBy("timestamp", "desc")
+      .get()
+      .then(snapshot => {
+          let tbody = document.getElementById('pilotReportBody');
+          tbody.innerHTML = '';
+          
+          let totalOrders = 0;
+          let totalDeliveryFees = 0;
+          let totalAmount = 0;
+
+          snapshot.forEach(doc => {
+              let o = doc.data();
+              if(o.status !== 'cancelled') {
+                  totalOrders++;
+                  totalDeliveryFees += (o.deliveryFee || 0);
+                  totalAmount += o.totalAmount;
+                  
+                  let dateStr = o.timestamp ? o.timestamp.toDate().toLocaleString('ar-EG') : 'الآن';
+                  
+                  tbody.innerHTML += `<tr>
+                      <td>${o.orderNumber}</td>
+                      <td>${dateStr}</td>
+                      <td>${o.zone || '-'}</td>
+                      <td>${o.totalAmount.toFixed(2)} ج.م</td>
+                      <td style="color: #0f766e; font-weight: bold;">${(o.deliveryFee || 0).toFixed(2)} ج.م</td>
+                  </tr>`;
+              }
+          });
+
+          if(totalOrders === 0) {
+              tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ef4444;">لا توجد طلبات مسجلة لهذا الطيار حتى الآن.</td></tr>`;
+          }
+
+          document.getElementById('reportSummary').innerHTML = `
+              <div style="flex:1; background:white; padding:15px; border-radius:8px; text-align:center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                  <div style="color:#64748b; font-size:14px; margin-bottom:5px;">إجمالي الطلبات الموصلة</div>
+                  <div style="color:#1e293b; font-size:24px; font-weight:bold;">${totalOrders}</div>
+              </div>
+              <div style="flex:1; background:white; padding:15px; border-radius:8px; text-align:center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                  <div style="color:#64748b; font-size:14px; margin-bottom:5px;">إجمالي رسوم التوصيل (مستحقات)</div>
+                  <div style="color:#0f766e; font-size:24px; font-weight:bold;">${totalDeliveryFees.toFixed(2)} ج.م</div>
+              </div>
+              <div style="flex:1; background:white; padding:15px; border-radius:8px; text-align:center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                  <div style="color:#64748b; font-size:14px; margin-bottom:5px;">إجمالي قيمة الفواتير</div>
+                  <div style="color:#1e293b; font-size:24px; font-weight:bold;">${totalAmount.toFixed(2)} ج.م</div>
+              </div>
+          `;
+          
+          document.getElementById('pilotReportModal').style.display = 'flex';
+      }).catch(err => {
+          console.error("خطأ في جلب تقرير الطيار:", err);
+          alert("حدث خطأ أثناء تحميل التقرير، يرجى التأكد من الاتصال بالإنترنت.");
+      });
+}
+
+function closePilotReport() {
+    document.getElementById('pilotReportModal').style.display = 'none';
 }
 
 // ==========================================
@@ -485,7 +546,6 @@ function checkout() {
     };
 
     db.collection("orders").add(orderData).then((docRef) => {
-        // تحديث أوردرات الطيار لو دليفري
         if(orderType === 'دليفري' && extraData.pilotId) {
             db.collection("pilots").doc(extraData.pilotId).update({
                 ordersThisMonth: firebase.firestore.FieldValue.increment(1)
@@ -537,7 +597,7 @@ function fetchKitchenOrders() {
         
         snapshot.forEach((doc) => {
             const order = { id: doc.id, ...doc.data() };
-            if(order.branch !== currentBranch && currentUser.role !== 'admin') return; // تصفية بالفرع
+            if(order.branch !== currentBranch && currentUser.role !== 'admin') return; 
             
             let extra = order.type === 'صالة' ? ` (${order.table})` : '';
             let itemsHtml = order.items.map(i => `<div class="order-item-row"><span>${i.name}</span> <span>x${i.qty}</span></div>`).join('');
@@ -576,7 +636,6 @@ function fetchSales() {
         if (tbody) tbody.innerHTML = '';
         let totalRev = 0; let totalOrd = 0;
         
-        // متغيرات لتقفيل الشيفت
         let shiftDineIn = 0, shiftTakeaway = 0, shiftDelivery = 0, shiftTotal = 0;
 
         snapshot.forEach((doc) => {
@@ -612,7 +671,6 @@ function fetchSales() {
         if(dashRev) dashRev.innerText = totalRev.toFixed(2) + ' ج.م';
         if(dashOrd) dashOrd.innerText = totalOrd;
 
-        // تحديث شاشة الوردية
         const shiftSum = document.getElementById('shiftSummary');
         if(shiftSum) {
             shiftSum.innerHTML = `
@@ -638,13 +696,11 @@ function closeShiftAndPrint() {
     if(Number(shiftTotal) === 0) return alert("لا يوجد مبيعات مفتوحة في هذه الوردية.");
     
     if(confirm("هل أنت متأكد من إغلاق الوردية؟ سيتم تصفير العداد وبدء وردية جديدة.")) {
-        // طباعة تقرير الـ Z
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`<html dir="rtl"><body style="font-family:sans-serif; text-align:center;"><h2>تقرير نهاية الوردية (Z-Report)</h2><p>فرع: ${currentBranch}</p><hr>${document.getElementById('shiftSummary').innerHTML}</body></html>`);
         printWindow.document.close();
         printWindow.print();
         
-        // إغلاق الطلبات في قاعدة البيانات
         db.collection("orders").where("branch", "==", currentBranch).where("shiftClosed", "==", false).get().then(snapshot => {
             const batch = db.batch();
             snapshot.forEach(doc => { batch.update(doc.ref, { shiftClosed: true }); });
@@ -667,7 +723,6 @@ function initApp() {
     fetchSales();
 }
 
-// إظهار شاشة الدخول أولاً عند تحميل الصفحة
 window.onload = () => {
     document.getElementById('loginOverlay').style.display = 'flex';
 };
