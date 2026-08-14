@@ -20,14 +20,19 @@
 
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; background-color: var(--primary-bg); overflow: hidden; }
 
+        /* شاشة تسجيل الدخول */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e293b; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 40px; border-radius: 10px; width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .login-box button { width: 100%; padding: 10px; background: var(--active-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
         .sidebar { width: 250px; background-color: var(--sidebar-bg); color: var(--text-light); display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
         .logo-area { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .logo-area img { width: 40px; height: 40px; border-radius: 5px; }
         .nav-links { flex: 1; overflow-y: auto; padding: 10px 0; }
         .nav-link { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: #cbd5e1; text-decoration: none; cursor: pointer; transition: 0.2s; }
         .nav-link:hover, .nav-link.active { background-color: var(--sidebar-hover); color: white; border-right: 4px solid #34d399; }
         .nav-link i { width: 20px; text-align: center; }
-        .user-area { padding: 15px; background-color: rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; }
+        .user-area { padding: 15px; background-color: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
         .user-avatar { width: 35px; height: 35px; background-color: #0f766e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
         .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100%; }
@@ -35,10 +40,9 @@
         .header-title { font-size: 18px; font-weight: bold; color: var(--text-dark); }
         .header-actions { display: flex; align-items: center; gap: 15px; }
         
-        /* مؤشر الاتصال الواضح */
         .sync-status { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; padding: 5px 12px; background: #f1f5f9; border-radius: 20px; border: 1px solid var(--border-color); }
-        .sync-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; }
-        .sync-dot.offline { background-color: #ef4444; }
+        .sync-dot { width: 10px; height: 10px; background-color: #ef4444; border-radius: 50%; transition: 0.3s; }
+        .sync-dot.online { background-color: #10b981; }
 
         .branch-select { padding: 5px 10px; border: 1px solid var(--border-color); border-radius: 5px; background: white; color: var(--text-dark); }
 
@@ -46,13 +50,20 @@
         .screen { display: none !important; height: 100%; width: 100%; flex-direction: column; }
         .screen.active { display: flex !important; }
 
+        /* الكاشير */
         .cashier-screen { flex-direction: row; }
         .cart-panel { width: 350px; background: white; border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
         .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .order-types { display: flex; gap: 10px; margin-bottom: 15px; }
-        .type-btn { flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .type-btn { flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; font-size: 12px; }
         .type-btn.active { background: var(--active-color); color: white; border-color: var(--active-color); }
-        .cart-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; }
+        
+        /* إضافات الدليفري والصالة */
+        .extra-options { display: none; margin-bottom: 15px; flex-direction: column; gap: 10px; }
+        .extra-options.active { display: flex; }
+        .extra-options select, .extra-options input { padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; width: 100%; box-sizing: border-box; }
+
+        .cart-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; color: #94a3b8; }
         .cart-totals { margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px; }
         .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: #64748b; }
         .grand-total { display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; color: var(--text-dark); margin-bottom: 15px; }
@@ -71,6 +82,7 @@
         .product-name { font-size: 14px; font-weight: bold; color: var(--text-dark); margin-bottom: 5px; flex: 1; }
         .product-price { color: var(--active-color); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
 
+        /* المطبخ */
         .kitchen-screen { flex-direction: row; gap: 15px; padding: 15px; width: 100%; box-sizing: border-box; background-color: white; }
         .kanban-column { flex: 1; display: flex; flex-direction: column; background-color: #fafafa; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; }
         .kanban-header { padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -87,58 +99,91 @@
         .btn-start { background-color: var(--active-color); }
         .btn-ready { background-color: #10b981; }
         .btn-deliver { background-color: #3b82f6; }
-        .empty-column { text-align: center; color: #cbd5e1; margin-top: 50px; }
 
+        /* الجداول العامة */
         .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
         .data-table thead { background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
-        .data-table th { padding: 15px; color: #475569; font-weight: bold; }
-        .data-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
-        .data-table tr:last-child td { border-bottom: none; }
+        .data-table th { padding: 15px; color: #475569; font-weight: bold; text-align: center; }
+        .data-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        
+        /* أزرار الحالات */
+        .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; color: white; cursor: pointer; }
+        .status-active { background-color: #10b981; }
+        .status-inactive { background-color: #ef4444; }
+
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; margin: 0 5px; }
+        .btn-edit { color: #3b82f6; }
+        .btn-delete { color: #ef4444; }
+
+        .top-bar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="logo-area">
-            <div style="width:40px; height:40px; background:white; border-radius:5px;"></div>
-            <h3>Coffee 101</h3>
-        </div>
-        
-        <div class="nav-links">
-            <a class="nav-link active" onclick="switchScreen('cashier', this)"><i class="fa-solid fa-desktop"></i> شاشة الكاشير</a>
-            <a class="nav-link" onclick="switchScreen('kitchen', this)"><i class="fa-solid fa-fire-burner"></i> شاشة المطبخ</a>
-            <a class="nav-link" onclick="switchScreen('dashboard', this)"><i class="fa-solid fa-chart-line"></i> لوحة المبيعات</a>
-            <a class="nav-link" onclick="switchScreen('customers', this)"><i class="fa-solid fa-users"></i> العملاء</a>
-            <a class="nav-link" onclick="switchScreen('products', this)"><i class="fa-solid fa-box-open"></i> المنتجات</a>
-            <a class="nav-link" onclick="switchScreen('categories', this)"><i class="fa-solid fa-layer-group"></i> الأقسام</a>
-            <a class="nav-link" onclick="switchScreen('sales', this)"><i class="fa-solid fa-file-invoice-dollar"></i> سجل المبيعات</a>
-        </div>
-
-        <div class="user-area">
-            <div class="user-avatar">م</div>
-            <div>
-                <div style="font-size: 14px; font-weight: bold;">المدير</div>
-                <div style="font-size: 12px; color: #94a3b8;">مدير النظام</div>
-            </div>
+    <!-- شاشة تسجيل الدخول -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2>تسجيل الدخول</h2>
+            <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+            <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            <button onclick="attemptLogin()">دخول</button>
+            <p id="loginError" style="color: red; display: none; font-size: 12px; margin-top: 10px;">بيانات الدخول غير صحيحة</p>
         </div>
     </div>
 
+    <!-- الشريط الجانبي -->
+    <div class="sidebar">
+        <div class="logo-area">
+            <i class="fa-solid fa-utensils" style="font-size: 24px;"></i>
+            <h3>نظام المطعم</h3>
+        </div>
+        
+        <div class="nav-links" id="sidebarLinks">
+            <a class="nav-link active" data-role="cashier" onclick="switchScreen('cashier', this)"><i class="fa-solid fa-desktop"></i> شاشة الكاشير</a>
+            <a class="nav-link" data-role="kitchen" onclick="switchScreen('kitchen', this)"><i class="fa-solid fa-fire-burner"></i> شاشة المطبخ</a>
+            <a class="nav-link" data-role="admin" onclick="switchScreen('dashboard', this)"><i class="fa-solid fa-chart-line"></i> لوحة المبيعات</a>
+            <a class="nav-link" data-role="cashier" onclick="switchScreen('customers', this)"><i class="fa-solid fa-users"></i> العملاء</a>
+            <a class="nav-link" data-role="admin" onclick="switchScreen('pilots', this)"><i class="fa-solid fa-motorcycle"></i> الطيارين</a>
+            <a class="nav-link" data-role="admin" onclick="switchScreen('products', this)"><i class="fa-solid fa-box-open"></i> المنتجات</a>
+            <a class="nav-link" data-role="admin" onclick="switchScreen('categories', this)"><i class="fa-solid fa-layer-group"></i> الأقسام</a>
+            <a class="nav-link" data-role="admin" onclick="switchScreen('sales', this)"><i class="fa-solid fa-file-invoice-dollar"></i> سجل المبيعات</a>
+            <a class="nav-link" data-role="admin" onclick="switchScreen('settings', this)"><i class="fa-solid fa-gear"></i> الإعدادات</a>
+            <a class="nav-link" data-role="cashier" onclick="switchScreen('shift', this)"><i class="fa-solid fa-clock"></i> تقفيل الوردية</a>
+        </div>
+
+        <div class="user-area" onclick="logout()">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="user-avatar" id="currentUserIcon">م</div>
+                <div>
+                    <div style="font-size: 14px; font-weight: bold;" id="currentUserName">المستخدم</div>
+                    <div style="font-size: 12px; color: #94a3b8;" id="currentUserRole">صلاحية</div>
+                </div>
+            </div>
+            <i class="fa-solid fa-right-from-bracket" style="color: #ef4444;" title="تسجيل خروج"></i>
+        </div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
     <div class="main-wrapper">
         <div class="header">
             <div class="header-title" id="pageTitle">شاشة الكاشير</div>
             <div class="header-actions">
                 <div class="sync-status" id="connectionStatus">
-                    <span class="sync-dot" id="syncDot"></span> <span id="syncText">متصل بالإنترنت</span>
+                    <span class="sync-dot" id="syncDot"></span> <span id="syncText">جاري الفحص...</span>
                 </div>
-                <select class="branch-select"><option>الفرع الرئيسي</option></select>
+                <select class="branch-select" id="branchSelector" onchange="changeBranch()">
+                    <option value="main">الفرع الرئيسي</option>
+                    <option value="branch1">فرع مدينة نصر</option>
+                </select>
             </div>
         </div>
 
         <div class="content-area">
             
+            <!-- شاشة الكاشير -->
             <div id="cashierScreen" class="screen cashier-screen active">
                 <div class="products-panel">
-                    <input type="text" class="search-bar" placeholder="امسح الباركود أو ابحث عن منتج...">
+                    <input type="text" id="searchPos" class="search-bar" placeholder="ابحث عن منتج بالاسم..." onkeyup="filterPosProducts()">
                     <div class="categories-scroll" id="categoriesScroll">
                         <div class="category-pill active" onclick="filterByCategory('الكل', this)">الكل</div>
                     </div>
@@ -152,23 +197,45 @@
                         <h4>سلة المبيعات</h4>
                         <i class="fa-solid fa-trash-can" style="color: #ef4444; cursor: pointer;" onclick="clearCart()"></i>
                     </div>
+                    
                     <div class="order-types">
                         <div class="type-btn active" onclick="setOrderType('تيك أواي', this)"><i class="fa-solid fa-bag-shopping"></i> تيك أواي</div>
                         <div class="type-btn" onclick="setOrderType('دليفري', this)"><i class="fa-solid fa-motorcycle"></i> دليفري</div>
                         <div class="type-btn" onclick="setOrderType('صالة', this)"><i class="fa-solid fa-chair"></i> صالة</div>
                     </div>
-                    <div class="cart-items" id="cartItems">
-                        <p>السلة فارغة</p>
+
+                    <!-- خيارات الصالة -->
+                    <div id="dineInOptions" class="extra-options">
+                        <select id="tableSelect">
+                            <option value="">-- اختر الترابيزة --</option>
+                        </select>
                     </div>
+
+                    <!-- خيارات الدليفري -->
+                    <div id="deliveryOptions" class="extra-options">
+                        <select id="deliveryZoneSelect" onchange="updateDeliveryFee()">
+                            <option value="" data-fee="0">-- اختر المنطقة (الزون) --</option>
+                        </select>
+                        <select id="pilotSelect">
+                            <option value="">-- اختر الطيار --</option>
+                        </select>
+                        <input type="text" id="deliveryCustomerPhone" placeholder="رقم هاتف العميل للبحث السريع">
+                    </div>
+
+                    <div class="cart-items" id="cartItems">
+                        <p style="margin-top: 50px;">السلة فارغة</p>
+                    </div>
+                    
                     <div class="cart-totals">
-                        <div class="total-row"><span>المجموع الفرعي</span> <span>0.00</span></div>
-                        <div class="total-row"><span>الضريبة</span> <span>0.00</span></div>
+                        <div class="total-row"><span>المجموع الفرعي</span> <span id="subTotal">0.00</span></div>
+                        <div class="total-row" id="deliveryFeeRow" style="display:none;"><span>خدمة التوصيل</span> <span id="deliveryFeeAmount">0.00</span></div>
                         <div class="grand-total"><span>الإجمالي الكلي</span> <span id="totalPrice">0.00</span></div>
                         <button class="btn-checkout" onclick="checkout()">إتمام البيع</button>
                     </div>
                 </div>
             </div>
 
+            <!-- شاشة المطبخ -->
             <div id="kitchenScreen" class="screen kitchen-screen">
                 <div class="kanban-column">
                     <div class="kanban-header new">
@@ -193,104 +260,144 @@
                 </div>
             </div>
 
-            <div id="productsScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="addNewProduct()">+ منتج جديد</button>
-                    <input type="text" class="search-bar" style="width: 300px; margin: 0;" placeholder="ابحث بالاسم...">
+            <!-- شاشة المنتجات -->
+            <div id="productsScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto;">
+                <div class="top-bar-controls">
+                    <button class="btn-checkout" style="width: auto; padding: 10px 20px;" onclick="openProductModal()">+ منتج جديد</button>
+                    <div style="display: flex; gap: 10px;">
+                        <select class="search-bar" id="filterProductStatus" style="width: 150px; margin: 0;" onchange="renderProductsTable()">
+                            <option value="all">كل المنتجات</option>
+                            <option value="active">النشطة فقط</option>
+                            <option value="inactive">الغير نشطة</option>
+                        </select>
+                        <input type="text" id="searchProductsTable" class="search-bar" style="width: 250px; margin: 0;" placeholder="ابحث باسم المنتج..." onkeyup="renderProductsTable()">
+                    </div>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="text-align: right;">اسم المنتج</th>
-                            <th style="text-align: center;">السعر</th>
-                            <th style="text-align: center;">القسم</th>
-                            <th style="text-align: center;">الحالة</th>
-                            <th style="text-align: center;">الإجراءات (تعديل / حذف)</th>
+                            <th>اسم المنتج</th>
+                            <th>القسم</th>
+                            <th>السعر</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody"></tbody>
                 </table>
             </div>
 
-            <div id="categoriesScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="addNewCategory()">+ قسم جديد</button>
+            <!-- شاشة العملاء -->
+            <div id="customersScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto;">
+                <div class="top-bar-controls">
+                    <button class="btn-checkout" style="width: auto; padding: 10px 20px;" onclick="openCustomerModal()">+ عميل جديد</button>
+                    <input type="text" id="searchCustomers" class="search-bar" style="width: 300px; margin: 0;" placeholder="ابحث برقم الهاتف أو الاسم..." onkeyup="renderCustomersTable()">
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="text-align: right;">اسم القسم</th>
-                            <th style="text-align: center;">الإجراءات</th>
+                            <th>اسم العميل</th>
+                            <th>رقم الهاتف</th>
+                            <th>المنطقة (الزون)</th>
+                            <th>العنوان / اللوكيشن</th>
+                            <th>إجراءات</th>
                         </tr>
                     </thead>
-                    <tbody id="categoriesTableBody">
-                        <tr><td colspan="2" style="text-align:center; padding: 20px; color: #94a3b8;">جاري التحميل...</td></tr>
-                    </tbody>
+                    <tbody id="customersTableBody"></tbody>
                 </table>
             </div>
 
-            <div id="salesScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
-                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <div>
-                        <h4 style="color: #64748b; margin: 0 0 10px 0;">إجمالي إيرادات المبيعات</h4>
-                        <h2 id="totalSalesHeader" style="color: #0f766e; margin: 0;">0.00 ج.م</h2>
-                    </div>
+            <!-- شاشة الطيارين (الدليفري) -->
+            <div id="pilotsScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto;">
+                <div class="top-bar-controls">
+                    <button class="btn-checkout" style="width: auto; padding: 10px 20px;" onclick="openPilotModal()">+ طيار جديد</button>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="text-align: right;">رقم الفاتورة</th>
-                            <th style="text-align: center;">تاريخ البيع</th>
-                            <th style="text-align: center;">نوع الطلب</th>
-                            <th style="text-align: center;">الإجمالي</th>
-                            <th style="text-align: center;">الحالة</th>
+                            <th>اسم الطيار</th>
+                            <th>رقم الهاتف</th>
+                            <th>تاريخ التعيين</th>
+                            <th>إجمالي الأوردرات (الشهر الحالي)</th>
+                            <th>تقرير مفصل</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pilotsTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- شاشة سجل المبيعات -->
+            <div id="salesScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>رقم الفاتورة</th>
+                            <th>تاريخ ووقت البيع</th>
+                            <th>نوع الطلب</th>
+                            <th>الإجمالي</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="salesTableBody"></tbody>
                 </table>
             </div>
 
-            <div id="customersScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto; background-color: var(--primary-bg);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <button class="btn-checkout" style="width: auto; padding: 10px 20px; background-color: var(--active-color);" onclick="addNewCustomer()">+ عميل جديد</button>
-                    <input type="text" class="search-bar" style="width: 300px; margin: 0;" placeholder="ابحث بالاسم أو رقم الهاتف...">
+            <!-- شاشة تقفيل الوردية -->
+            <div id="shiftScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; overflow-y: auto;">
+                <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; text-align: center;">
+                    <h2 style="color: var(--text-dark); margin-bottom: 20px;">تقرير نهاية الوردية (Z-Report)</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: right; margin-bottom: 30px;" id="shiftSummary">
+                        <!-- سيتم ملئها بالجافاسكريبت -->
+                    </div>
+                    <button class="btn-checkout" onclick="closeShiftAndPrint()">إغلاق الوردية وطباعة التقرير</button>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th style="text-align: right;">اسم العميل</th>
-                            <th style="text-align: center;">رقم الهاتف</th>
-                            <th style="text-align: center;">عنوان التوصيل</th>
-                            <th style="text-align: center;">إجمالي المشتريات</th>
-                            <th style="text-align: center;">الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customersTableBody">
-                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">جاري التحميل...</td></tr>
-                    </tbody>
-                </table>
             </div>
 
-            <div id="dashboardScreen" class="screen" style="padding: 20px; width: 100%; box-sizing: border-box; background-color: var(--primary-bg);">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%;">
-                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <h4 style="color: #64748b; margin: 0 0 10px 0;">إجمالي الإيرادات</h4>
-                        <h2 id="totalRevenue" style="color: #0f766e; margin: 0;">0.00 ج.م</h2>
+            <!-- شاشات إضافية (الأقسام، لوحة المبيعات، الإعدادات) ستكون بنفس الهيكل -->
+            <div id="categoriesScreen" class="screen" style="padding: 20px;">
+                <button class="btn-checkout" style="width: auto; padding: 10px 20px; margin-bottom: 20px;" onclick="addNewCategory()">+ قسم جديد</button>
+                <table class="data-table"><thead><tr><th>اسم القسم</th><th>إجراءات</th></tr></thead><tbody id="categoriesTableBody"></tbody></table>
+            </div>
+            
+            <div id="settingsScreen" class="screen" style="padding: 20px;">
+                <h2>إعدادات النظام</h2>
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3>إعدادات الصالة</h3>
+                    <input type="number" id="settingsTableCount" class="search-bar" placeholder="أدخل عدد الترابيزات المتاحة">
+                    <button class="btn-checkout" style="width:auto;" onclick="saveTableSettings()">حفظ</button>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 8px;">
+                    <h3>إعدادات مناطق التوصيل (Zones)</h3>
+                    <button class="btn-checkout" style="width:auto; margin-bottom: 10px;" onclick="addZoneModal()">+ إضافة منطقة جديدة</button>
+                    <table class="data-table"><thead><tr><th>اسم المنطقة</th><th>تكلفة التوصيل</th><th>إجراءات</th></tr></thead><tbody id="zonesTableBody"></tbody></table>
+                </div>
+            </div>
+
+            <div id="dashboardScreen" class="screen" style="padding: 20px;">
+                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%;">
+                    <div style="background: white; padding: 20px; border-radius: 8px;">
+                        <h4 style="color: #64748b;">إجمالي الإيرادات</h4>
+                        <h2 id="totalRevenue" style="color: #0f766e;">0.00 ج.م</h2>
                     </div>
-                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <h4 style="color: #64748b; margin: 0 0 10px 0;">عدد الفواتير</h4>
-                        <h2 id="totalOrders" style="color: #1e293b; margin: 0;">0</h2>
+                    <div style="background: white; padding: 20px; border-radius: 8px;">
+                        <h4 style="color: #64748b;">عدد الفواتير</h4>
+                        <h2 id="totalOrders" style="color: #1e293b;">0</h2>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="app.js"></script>
     
     <script>
+        // تنقل بسيط بين الشاشات
         function switchScreen(screenName, element) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
